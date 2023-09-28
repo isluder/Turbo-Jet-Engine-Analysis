@@ -2,6 +2,7 @@ import math
 import numpy as np
 import pandas as pd
 
+
 class turbojet_engine:
     def __init__(self):
         ### Remember in python state 1 start at index 0
@@ -21,8 +22,6 @@ class turbojet_engine:
         self.T1 = 223                                #temperature, K
         self.V1 = 260                                #cruise speed, m/s
         
-        self.c1 = np.sqrt(self.k*self.R*self.T1)   #speed of sound, m/s
-        self.Ma1 = self.V1/self.c1               #cruise Mach Number
         
         #Other Design Parameters
         self.rp = 32                                    #pressure ratio in compressor
@@ -41,12 +40,17 @@ class turbojet_engine:
         #Entropy Reference Point
         self.s1 = 100
         self.s01 = self.s1
-    
-    def cycle_analysis(self):
-    #1) Entering the diffuser (ambient air)        
+        
+    def calc_Ma1(self):
+        self.c1 = np.sqrt(self.k*self.R*self.T1)   #speed of sound, m/s
+        self.Ma1 = self.V1/self.c1               #cruise Mach Number
+
+    def state1(self):
+            #1) Entering the diffuser (ambient air)        
         self.T01 = self.T1*(1 + ((self.k-1)/2)*(self.Ma1**2))
         self.p01 = self.p1*(self.T01/self.T1)**(self.k/(self.k-1))
         
+    def state2(self):
     #2) End of diffuser and inlet to compressor    
         self.T02 = self.T01
         self.Ma2 = self.Max
@@ -56,8 +60,9 @@ class turbojet_engine:
         self.s02 = self.s01 + self.cp*np.log(self.T02/self.T01)-self.R*np.log(self.p02/self.p01)
         self.s2 = self.s02
         
-        self.V2 = self.Max*np.sqrt(self.k*self.R*self.T2)
-        
+        self.V2 = self.Max*np.sqrt(self.k*self.R*self.T2)    
+    
+    def state3(self):
     #3) End of Compressor and inlet to combustion chamber
         self.p03 = self.p02*self.rp
         self.Ma3 = self.Max
@@ -72,6 +77,7 @@ class turbojet_engine:
         
         self.V3 = self.Ma3*np.sqrt(self.k*self.R*self.T3)
         
+    def state4(self):
     #4) End of combustion chamber and inlet to turbine
         self.p04 = self.pi_b*self.p03
         self.Ma4 = self.Max
@@ -79,12 +85,12 @@ class turbojet_engine:
         self.p4 = self.p04*(self.T4/self.T04)**(self.k/(self.k-1))
         self.s04 = self.s03 + self.cp*np.log(self.T04/self.T03)-self.R*np.log(self.p04/self.p03)
         self.s4 = self.s04
-        
         #   fuel-to-air ratio
         self.f = (self.T04 - self.T03)/(self.Q_R*self.eta_b/self.cp - self.T04)
         
         self.V4 = self.Ma4*np.sqrt(self.k*self.R*self.T4)
-        
+    
+    def state5(self):
     #5) End of turbine and inlet to nozzle
     #       all power output from turbine runs the compressor
 
@@ -99,8 +105,9 @@ class turbojet_engine:
         self.pi_t = self.p05/self.p04
         self.eta_t = (1-self.pi_t**((self.k-1)*self.eta_pt/self.k))/(1-self.pi_t**((self.k-1)/self.k))
         
-        self.V5 = self.Ma5*np.sqrt(self.k*self.R*self.T5)
-    
+        self.V5 = self.Ma5*np.sqrt(self.k*self.R*self.T5) 
+        
+    def state6(self):
     #6) End of nozzle with perfect expansion
         self.p6 = self.p1
         self.T6 = self.T05*(1-self.eta_n*(1-(self.p6/self.p05)**((self.k-1)/self.k)))
@@ -109,8 +116,23 @@ class turbojet_engine:
         self.T06 = self.T6*(1 + (self.k-1)/2*self.Ma6**2) 
         self.p06 = self.p6*(self.T06/self.T6)**(self.k/(self.k-1))
         self.s06 = self.s05 + self.cp*np.log(self.T06/self.T05)-self.R*np.log(self.p06/self.p05)
-        self.s6 = self.s06
+        self.s6 = self.s06       
+    
+    def cycle_analysis(self):
+        self.calc_Ma1()
         
+        self.state1()
+        
+        self.state2()
+        
+        self.state3()
+
+        self.state4()
+        
+        self.state5()
+
+        self.state6()
+
     def perform_analysis(self):
         self.F_m = (1+self.f)*self.V6 - self.V1
         self.TSFC = self.f/((1+self.f)*self.V6-self.V1)*1e6;                  # mg/s/N
