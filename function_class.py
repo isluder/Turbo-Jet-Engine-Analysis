@@ -5,8 +5,6 @@ import pandas as pd
 
 class turbojet_engine:
     def __init__(self):
-        ### Remember in python state 1 start at index 0
-        
         #Air - cold-air standard analysis
         self.R = 287                        # gas constant, J/kg-K
         self.k = 1.4                        # specific heat ratio, assumed for ideal air
@@ -33,7 +31,7 @@ class turbojet_engine:
         self.eta_pc = 0.9       #polytropic efficiency of compressor
         self.eta_pt = 0.85      #polytropic efficiency of turbine
         self.eta_n = 0.9        #adaibatic efficiency of nozzle
-        #
+        
         self.pi_b = 0.95        #pressure ratio in burner
         self.eta_b = 0.992      #combustion efficiency
         
@@ -174,6 +172,7 @@ class turbojet_engine:
 
 def run_all():
     turbine = turbojet_engine()
+    # turbine.p1 = 50
     turbine.cycle_analysis()
     turbine.perform_analysis()
     turbine.gather_states()
