@@ -12,6 +12,7 @@ class turbojet_engine:
         
         #Input Design Parameters
         
+        
         #Internal axial Mach Number
         self.Max = 0.2
         
